@@ -4,15 +4,19 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv").config();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-var cookieParser = require("cookie-parser");
+const cookieParser = require("cookie-parser");
+const multer = require("multer");
+const upload = multer();
 
 const User = require("./models/User");
+const Post = require("./models/Post");
 
 const app = express();
 
 app.use(cors({ credentials: true, origin: "http://localhost:5173" }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(upload.none());
 
 mongoose.connect(process.env.MONGO_URL);
 
@@ -67,6 +71,81 @@ app.get("/profile", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.cookie("token", "").json("logout successful");
+});
+
+// CRUD Operation
+
+// CREATE
+app.post("/upload", (req, res) => {
+  const { token } = req.cookies;
+
+  if (token) {
+    jwt.verify(token, process.env.JWT_KEY, {}, async (err, info) => {
+      if (err) {
+        return res.status(401).json({ messgae: "user not auth." });
+      }
+      const { title, content, imageUrl } = req.body;
+      const postDoc = await Post.create({
+        title,
+        imageUrl,
+        content,
+        author: info.user_id,
+      });
+      res.status(200).json(postDoc);
+    });
+  } else {
+    res.status(401).json({ messgae: "user not auth." });
+  }
+});
+
+// READ => READ ALL
+app.get("/posts", async (req, res) => {
+  const postDocs = await Post.find()
+    .populate("author", ["username"])
+    .sort({ createdAt: -1 });
+  res.status(200).json(postDocs);
+});
+
+// READ => READ ONE
+app.get("/post/:id", async (req, res) => {
+  const { id } = req.params;
+  const postDoc = await Post.findById(id).populate("author", ["username"]);
+  res.status(200).json(postDoc);
+});
+
+// UPDATE => GET OLD DATA
+app.get("/edit-post/:id", async (req, res) => {
+  const { id } = req.params;
+  const postDoc = await Post.findById(id);
+  res.status(200).json(postDoc);
+});
+
+// UPDATE => REAL UPDATE
+app.put("/edit-post", (req, res) => {
+  const { token } = req.cookies;
+
+  if (token) {
+    jwt.verify(token, process.env.JWT_KEY, {}, async (err, info) => {
+      if (err) {
+        return res.status(401).json({ messgae: "user not auth." });
+      }
+      const { title, content, imageUrl, post__id } = req.body;
+      const postDoc = await Post.findById(post__id);
+      postDoc.title = title;
+      postDoc.content = content;
+      postDoc.imageUrl = imageUrl;
+      postDoc.save();
+      res.status(200).json(postDoc);
+    });
+  } else {
+    res.status(401).json({ messgae: "user not auth." });
+  }
+});
+
+app.delete("/post-delete/:id", async (req, res) => {
+  const { id } = req.params;
+  await Post.findByIdAndRemove(id);
+  res.status(200).json({ message: "Post Deleted" });
 });
 
 app.listen(8080);
