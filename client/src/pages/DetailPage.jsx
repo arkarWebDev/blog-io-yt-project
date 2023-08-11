@@ -1,9 +1,11 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import BackIcon from "../icons/BackIcon";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { formatISO9075 } from "date-fns";
+import { UserContext } from "../UserContext";
 
 const DetailPage = () => {
+  const { userInfo } = useContext(UserContext);
   const [post, setPost] = useState([]);
   const params = useParams();
 
@@ -21,12 +23,17 @@ const DetailPage = () => {
     getPost();
   }, []);
 
+  const { title, imageUrl, author, createdAt, _id, content } = post;
   const postDelete = async () => {
     const response = await fetch(
       `${import.meta.env.VITE_URL}/post-delete/${params.id}`,
       {
         method: "DELETE",
         credentials: "include",
+        body: JSON.stringify({ author_id: author._id }),
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
     );
 
@@ -40,8 +47,6 @@ const DetailPage = () => {
   if (redirect) {
     return <Navigate to="/" />;
   }
-
-  const { title, imageUrl, author, createdAt, _id, content } = post;
 
   return (
     <>
@@ -70,20 +75,26 @@ const DetailPage = () => {
             className="font-medium text-gray-700 my-3"
             dangerouslySetInnerHTML={{ __html: content }}
           ></div>
-          <div className="flex items-center gap-2 justify-end mb-20">
-            <Link
-              to={`/post-edit/${_id}`}
-              className="px-3 py-1 text-lg border-2 border-black bg-black text-white"
-            >
-              Edit
-            </Link>
-            <p
-              className="px-3 py-1 text-lg border-2 border-black bg-black text-white"
-              onClick={postDelete}
-            >
-              Delete
-            </p>
-          </div>
+          {author && userInfo && (
+            <>
+              {author._id === userInfo.user_id && (
+                <div className="flex items-center gap-2 justify-end mb-20">
+                  <Link
+                    to={`/post-edit/${_id}`}
+                    className="px-3 py-1 text-lg border-2 border-black bg-black text-white"
+                  >
+                    Edit
+                  </Link>
+                  <p
+                    className="px-3 py-1 text-lg border-2 border-black bg-black text-white cursor-pointer"
+                    onClick={postDelete}
+                  >
+                    Delete
+                  </p>
+                </div>
+              )}
+            </>
+          )}
         </section>
       )}
     </>

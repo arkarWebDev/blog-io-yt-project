@@ -5,7 +5,8 @@ import HomePage from "./pages/HomePage";
 import DetailPage from "./pages/DetailPage";
 import EditPage from "./pages/EditPage";
 import CreatePage from "./pages/CreatePage";
-import { UserContextProvider } from "../UserContext";
+import { UserContextProvider } from "./UserContext";
+import { checkLogin } from "./utils/checklogin";
 
 const App = () => {
   const router = createBrowserRouter([
@@ -28,10 +29,12 @@ const App = () => {
         {
           path: "/post-create",
           element: <CreatePage />,
+          loader: checkLogin,
         },
         {
           path: "/post-edit/:id",
           element: <EditPage />,
+          loader: checkLogin,
         },
       ],
     },

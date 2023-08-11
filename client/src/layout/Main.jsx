@@ -5,7 +5,7 @@ const Main = () => {
   return (
     <>
       <Navbar />
-      <section className="px-10 2xl:px-96">
+      <section className=" max-w-2xl mx-auto">
         <Outlet />
       </section>
     </>

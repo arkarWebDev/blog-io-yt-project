@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { UserContext } from "../../UserContext";
+import { UserContext } from "../UserContext";
 
 const Navbar = () => {
   const { userInfo, setUserInfo } = useContext(UserContext);
@@ -9,8 +9,12 @@ const Navbar = () => {
     const response = await fetch(`${import.meta.env.VITE_URL}/profile`, {
       credentials: "include",
     });
-    const userData = await response.json();
-    setUserInfo(userData);
+    if (response.ok) {
+      const userData = await response.json();
+      setUserInfo(userData);
+    } else {
+      setUserInfo(null);
+    }
   };
 
   useEffect(() => {
@@ -26,7 +30,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="flex items-center justify-between p-10 2xl:px-96">
+    <nav className="flex items-center justify-between max-w-2xl mx-auto my-12">
       <Link to={"/"} className="font-bold text-2xl uppercase">
         Blog.io
       </Link>

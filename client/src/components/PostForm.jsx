@@ -8,6 +8,7 @@ const PostForm = ({ uiTitle, uiBtnText, isEditMode }) => {
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [editPostId, setEditPostId] = useState("");
+  const [authorId, setAuthorId] = useState("");
 
   const [redirect, setRedirect] = useState(false);
 
@@ -47,12 +48,13 @@ const PostForm = ({ uiTitle, uiBtnText, isEditMode }) => {
       `${import.meta.env.VITE_URL}/edit-post/${params.id}`
     );
     const post = await response.json();
-    const { title, content, imageUrl, _id } = post;
+    const { title, content, imageUrl, _id, author } = post;
 
     setTitle(title);
     setImageUrl(imageUrl);
     setContent(content);
     setEditPostId(_id);
+    setAuthorId(author);
   };
 
   useEffect((_) => {
@@ -68,6 +70,7 @@ const PostForm = ({ uiTitle, uiBtnText, isEditMode }) => {
     formData.append("imageUrl", imageUrl);
     formData.append("content", content);
     formData.append("post__id", editPostId);
+    formData.append("author_id", authorId);
 
     let fetchUrl = `${import.meta.env.VITE_URL}/upload`;
     let method = "POST";

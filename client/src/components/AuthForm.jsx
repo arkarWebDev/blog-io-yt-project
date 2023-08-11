@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { UserContext } from "../../UserContext";
+import { UserContext } from "../UserContext";
 
 const AuthForm = () => {
   const [username, setUsername] = useState("");

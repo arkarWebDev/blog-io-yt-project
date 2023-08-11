@@ -64,8 +64,10 @@ app.get("/profile", (req, res) => {
   if (token) {
     jwt.verify(token, process.env.JWT_KEY, {}, (err, userInfo) => {
       if (err) throw err;
-      res.json(userInfo);
+      return res.status(200).json(userInfo);
     });
+  } else {
+    res.status(401).json({ message: "not auth" });
   }
 });
 
@@ -129,13 +131,15 @@ app.put("/edit-post", (req, res) => {
       if (err) {
         return res.status(401).json({ messgae: "user not auth." });
       }
-      const { title, content, imageUrl, post__id } = req.body;
+      const { title, content, imageUrl, post__id, author_id } = req.body;
       const postDoc = await Post.findById(post__id);
-      postDoc.title = title;
-      postDoc.content = content;
-      postDoc.imageUrl = imageUrl;
-      postDoc.save();
-      res.status(200).json(postDoc);
+      if (author_id === info.user_id) {
+        postDoc.title = title;
+        postDoc.content = content;
+        postDoc.imageUrl = imageUrl;
+        postDoc.save();
+      }
+      return res.status(200).json(postDoc);
     });
   } else {
     res.status(401).json({ messgae: "user not auth." });
@@ -143,9 +147,24 @@ app.put("/edit-post", (req, res) => {
 });
 
 app.delete("/post-delete/:id", async (req, res) => {
-  const { id } = req.params;
-  await Post.findByIdAndRemove(id);
-  res.status(200).json({ message: "Post Deleted" });
+  const { token } = req.cookies;
+
+  if (token) {
+    jwt.verify(token, process.env.JWT_KEY, {}, async (err, info) => {
+      if (err) {
+        return res.status(401).json({ messgae: "user not auth." });
+      }
+      const { id } = req.params;
+      const { author_id } = req.body;
+
+      if (author_id === info.user_id) {
+        await Post.findByIdAndRemove(id);
+      }
+      res.status(200).json({ message: "Post Deleted" });
+    });
+  } else {
+    res.status(401).json({ messgae: "user not auth." });
+  }
 });
 
 app.listen(8080);
